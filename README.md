@@ -459,6 +459,3 @@ minimizing the need for prop drilling.
 - [useContext](https://reactjs.org/docs/hooks-reference.html#usecontext)
 - [Using Composition Instead of Context](https://youtu.be/3XaXKiXtNjw)
 - [Application State Management with React](https://kentcdodds.com/blog/application-state-management-with-react)
-
-[optional chaining]:
-  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining
