@@ -338,7 +338,8 @@ interface UserContextType {
 }
 
 // change the typing of the context to use the interface
-const UserContext = React.createContext<UserContextType | null>(null);
+// instead of null, we can now change our default value to be an empty object that is type asserted as UserContextType
+const UserContext = React.createContext<UserContextType>({} as UserContextType);
 
 function UserProvider({ children }: { children: ReactNode }) {
   // make the provider component stateful
@@ -360,64 +361,54 @@ the `Provider`, we're now using an **object** with `user` and `setUser` as the
 **value** for our context.
 
 Now that our context value contains more than just the `user` object, we have to
-change the typing. It now has the `user` object, the `setUser` setter function,
-and the possibility to be `null`. To make it cleaner, we created a type
-interface `UserContextType` to type the `user` and `setUser` properties, then
-used it in a union type with `null`.
+change the typing as well. It is an object with two properties: the `user`
+object and the `setUser` setter function. To make typing cleaner, we create a
+type interface `UserContextType` to type those properties individually. Then, we
+use that interface to type the context.
+
+Additionally, now that we know our context will be an object, we can provide an
+empty one as a default value to `createContext`. Although the default value is
+empty, we know that it will inevitably have the `user` and `setUser`
+properties - in other words, we know the object will be of type
+`UserContextType`. So, we assert that with `{} as UserContextType`.
 
 > **Note**: For another example of using a hook within a provider: you could use
 > the `useEffect` hook to have your provider component fetch some data from an
 > API when it loads; or to read some saved data from `localStorage`.
 
 After this update, `useContext()` now returns an object with all the values
-provided. Instead of `user`, let's change the variable we save our context on to
-`ctx`, which is short for context. We can then access our values via dot
-notation, for example: `ctx.user` or `ctx.setUser`.
+provided. We can use destructuring to access `user` and `setUser`.
 
 ```jsx
+// src/components/Header.tsx
 function Header({ theme, setTheme }: Props) {
-  // change context variable to ctx
-  const ctx = useContext(UserContext);
+  // destructure the context object
+  const { user, setUser } = useContext(UserContext);
 
-  // update function to use ctx
+  // now we can use setUser again
   function handleLogin() {
-    if (ctx?.user) {
-      ctx?.setUser(null);
+    if (.user) {
+      setUser(null);
     } else {
-      ctx?.setUser(defaultUser);
+      setUser(defaultUser);
     }
   }
 
-  return (
-    <header>
-      <h1>React Context</h1>
-      <nav>
-        {/* update ternary to use ctx */}
-        <ThemedButton onClick={handleLogin} theme={theme}>
-          {ctx?.user ? "Logout" : "Login"}
-        </ThemedButton>
-        <DarkModeToggle theme={theme} setTheme={setTheme} />
-      </nav>
-    </header>
-  );
+  // ...
 }
 ```
-
-> **Note**: Because our context has the possibility of being null, TypeScript
-> will error when trying to access values on `ctx`. To avoid that, we can use
-> [optional chaining notation][optional chaining].,
 
 We'll also need to update the `Profile` component since our context has changed:
 
 ```jsx
 function Profile({ theme }: Props) {
-  const ctx = useContext(UserContext);
+  const { user } = useContext(UserContext);
 
-  if (!ctx?.user) return <h2>Please Login To View Profile</h2>;
+  if (!user) return <h2>Please Login To View Profile</h2>;
   return (
     <div>
-      <h2>{ctx.user.name}'s Profile</h2>
-      <Interests interests={ctx.user.interests} theme={theme} />
+      <h2>{user.name}'s Profile</h2>
+      <Interests interests={user.interests} theme={theme} />
     </div>
   );
 }
