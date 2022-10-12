@@ -3,9 +3,9 @@ export interface User {
   interests: string[];
 }
 
-const user: User = {
+const defaultUser: User = {
   name: "Duane",
   interests: ["Coding", "Biking", "Words ending in 'ing'"],
 };
 
-export default user;
+export default defaultUser;

@@ -53,9 +53,9 @@ props, only to pass it along to a child component. For example, looking at the
 doesn't use it directly — it only needs to take this prop in so that it can pass
 it down to the `Interests` component:
 
-```jsx
+```tsx
 // takes theme as a prop
-function Profile({ user, theme }) {
+function Profile({ user, theme }: Props) {
   if (!user) return <h2>Please Login To View Profile</h2>;
   return (
     <div>
@@ -80,28 +80,51 @@ In order to create our context data, we need to create two things:
 - A context provider component
 
 Let's start by creating the context for our `user` data. To organize our context
-code, make a new file called `/src/context/user.js`. Then, create our context:
+code, make a new file called `/src/context/user.tsx`. Then, create our context
+and export it:
 
 ```jsx
-// src/context/user.js
+// src/context/user.tsx
+// import React
 import React from "react";
 
+// create the context
 const UserContext = React.createContext();
+
+// export it
+export { UserContext };
+```
+
+Since we're working with TypeScript, our IDE complains that we didn't provide a
+generic type or an initial value. In our case, we know what our user data will
+look like - there's even a `User` type interface proided for us in `src/data.ts`
+that we can import. We still don't want to provide an initial value, so instead
+we can pass in `null`. As a result, our type should be `User | null`:
+
+```tsx
+// src/context/user.tsx
+// import the User type
+import { User } from "../data";
+
+// type the context
+const UserContext = React.createContext<User | null>(null);
 ```
 
 After creating the context object, we need a special "provider" component that
 will give access to the context data to its child components. Here's how we can
 set up the context provider:
 
-```jsx
-// src/context/user.js
-import React from "react";
+```tsx
+// src/context/user.tsx
 
-// create the context
-const UserContext = React.createContext();
+// import ReactNode from react
+import React, { ReactNode } from "react";
+import { User } from "../data";
+
+const UserContext = React.createContext<User | null>(null);
 
 // create a provider component
-function UserProvider({ children }) {
+function UserProvider({ children }: { children: ReactNode }) {
   // the value prop of the provider will be our context data
   // this value will be available to child components of this provider
   return <UserContext.Provider value={null}>{children}</UserContext.Provider>;
@@ -110,15 +133,22 @@ function UserProvider({ children }) {
 export { UserContext, UserProvider };
 ```
 
+As we'll see next, the provider component needs to be wrapped around other
+components that need access to the context data. In other words, the provider
+_will_ have children passed to it, so we specify it in the props. The `children`
+can be any type of element, from divs to lists to other components. So to type
+it, we use a general umbrella type provided by React called `ReactNode` that
+encompasses all elements it could be.
+
 With our context created, and our provider component all set up, let's see how
 we can use this context data from other components.
 
 ## Using Context
 
-In order to give our components access to the context data, we must first use
-the provider component to wrap around any component that need access to the
-context. Based on our component hierarchy, the `Header` and `Profile` components
-both need access to the `user` data in our context:
+As we just learned, to give our components access to the context data, we must
+first use the provider component to wrap around any component that need access
+to the context. Based on our component hierarchy, the `Header` and `Profile`
+components both need access to the `user` data in our context:
 
 ```txt
 App [theme]
@@ -131,8 +161,9 @@ App [theme]
 
 So let's update the `App` component with the `UserProvider`:
 
-```jsx
-import React, { useState } from "react";
+```tsx
+// src/components/App.tsx
+import { useState } from "react";
 import Header from "./Header";
 import Profile from "./Profile";
 // import the provider
@@ -140,6 +171,8 @@ import { UserProvider } from "../context/user";
 
 function App() {
   const [theme, setTheme] = useState("dark");
+  // remove the user state
+
   return (
     <main className={theme}>
       {/* wrap components that need access to context data in the provider*/}
@@ -154,21 +187,31 @@ function App() {
 export default App;
 ```
 
-You'll notice we also removed the `user` prop from these components, since we'll
-be accessing that data via context instead.
+You'll notice we also removed the `user` prop from these components and deleted
+the `useState` definition of `user`, since we'll be accessing that data via
+context instead. TypeScript will now error saying that the components are
+missing props. Don't worry, we will fix those as we go along.
 
-Next, in order to access the context data from our components, we can use the
+Next, to access the context data from our components, we can use the
 `useContext` hook. This is another hook that's built into React, and it lets us
 access the `value` of our context provider in any child component. Here's how it
 looks:
 
 ```jsx
+// src/components/Profile.tsx
+
 // import the useContext hook
-import React, { useContext } from "react";
+import { useContext } from "react";
 // import the UserContext we created
 import { UserContext } from "../context/user";
 import Interests from "./Interests";
 
+// remove user from the Props interface
+interface Props {
+  theme: string;
+}
+
+// remove user from the destructured props
 function Profile({ theme }) {
   // call useContext with our UserContext
   const user = useContext(UserContext);
@@ -185,12 +228,19 @@ function Profile({ theme }) {
 }
 ```
 
+> **Note**: At this point, there will still be an error for the `Header`
+> component. We will fix that soon. However, to test out the app in the
+> meantime, close out the errors by clicking on the "X" in the top right corner
+> of the browser.
+
 You can test this out by updating the `value` prop in our `UserProvider` to
 something different, and see that the `Profile` component has access to the
 updated data:
 
 ```jsx
-function UserProvider({ children }) {
+// src/context/user.tsx
+
+function UserProvider({ children }: { children: ReactNode }) {
   const currentUser = {
     name: "Duane",
     interests: ["Coding", "Biking", "Words ending in 'ing'"],
@@ -201,18 +251,34 @@ function UserProvider({ children }) {
 }
 ```
 
-Let's hook up the `Header` component to our context as well:
+In the browser, you should now see Duane's profile. Remember to remove the
+`currentUser` data and change the default value back to `null` after testing.
+
+Next, let's hook up the `Header` component to our context as well:
 
 ```jsx
-import React, { useContext } from "react";
+// src/components/Header.tsx
+
+// import the useContext hook
+import { useContext } from "react";
 import ThemedButton from "./ThemedButton";
 import DarkModeToggle from "./DarkModeToggle";
 import defaultUser from "../data";
+// import the context
 import { UserContext } from "../context/user";
 
-function Header({ theme, setTheme }) {
+// remove user and setUser from the Props interface
+interface Props {
+  theme: string;
+  setTheme(theme: string): void;
+}
+
+// remove user and setUser from the destructured props
+function Header({ theme, setTheme }: Props) {
+  // use context to get the user data
   const user = useContext(UserContext);
 
+  // comment out the use of setUser within the handleLogin function for now
   function handleLogin() {
     if (user) {
       // setUser(null);
@@ -240,10 +306,12 @@ logging in/logging out a user. In the first version of our app, that
 functionality was available to use in the `App` component since we had a `user`
 variable as **state**:
 
-```jsx
+```tsx
+// src/components/App.tsx
+// old code just for review - do NOT change your App back to this
 function App() {
   const [theme, setTheme] = useState("dark");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   return (
     <main className={theme}>
       <Header theme={theme} setTheme={setTheme} user={user} setUser={setUser} />
@@ -256,9 +324,27 @@ function App() {
 We can re-gain this functionality by setting up the **context** value to be
 stateful instead!
 
-```jsx
-function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
+```tsx
+// src/context/user.tsx
+
+// import useState
+import React, { ReactNode, useState } from "react";
+import { User } from "../data";
+
+// create a type interface for the UserContext now that it will have multiple variables
+interface UserContextType {
+  user: User | null;
+  setUser: (user: User | null) => void;
+}
+
+// change the typing of the context to use the interface
+const UserContext = React.createContext<UserContextType | null>(null);
+
+function UserProvider({ children }: { children: ReactNode }) {
+  // make the provider component stateful
+  const [user, setUser] = useState<User | null>(null);
+
+  // set the value as an object of user and setUser
   return (
     <UserContext.Provider value={{ user, setUser }}>
       {children}
@@ -268,41 +354,77 @@ function UserProvider({ children }) {
 ```
 
 Since the `UserProvider` component is still just a React component, we can use
-any hooks we'd like within this component. You could also use the `useEffect`
-hook in the provider, if you'd like: for example, to have your provider
-component fetch some data from an API when it loads; or to read some saved data
-from `localStorage`.
+any hooks we'd like within this component. In the code above, we're using
+`useState` to create a `user` state variable as well as a setter function. In
+the `Provider`, we're now using an **object** with `user` and `setUser` as the
+**value** for our context.
 
-In the code above, we're using `useState` to create a `user` state variable as
-well as a setter function. In the `Provider`, we're now using an **object** with
-`user` and `setUser` as the **value** for our context.
+Now that our context value contains more than just the `user` object, we have to
+change the typing. It now has the `user` object, the `setUser` setter function,
+and the possibility to be `null`. To make it cleaner, we created a type
+interface `UserContextType` to type the `user` and `setUser` properties, then
+used it in a union type with `null`.
 
-After this update, we can now use the `setUser` function in our `Header`
-component:
+> **Note**: For another example of using a hook within a provider: you could use
+> the `useEffect` hook to have your provider component fetch some data from an
+> API when it loads; or to read some saved data from `localStorage`.
+
+After this update, `useContext()` now returns an object with all the values
+provided. Instead of `user`, let's change the variable we save our context on to
+`ctx`, which is short for context. We can then access our values via dot
+notation, for example: `ctx.user` or `ctx.setUser`.
 
 ```jsx
-function Header({ theme, setTheme }) {
-  const { user, setUser } = useContext(UserContext);
+function Header({ theme, setTheme }: Props) {
+  // change context variable to ctx
+  const ctx = useContext(UserContext);
+
+  // update function to use ctx
   function handleLogin() {
-    if (user) {
-      setUser(null);
+    if (ctx?.user) {
+      ctx?.setUser(null);
     } else {
-      setUser(defaultUser);
+      ctx?.setUser(defaultUser);
     }
   }
-  // ...
+
+  return (
+    <header>
+      <h1>React Context</h1>
+      <nav>
+        {/* update ternary to use ctx */}
+        <ThemedButton onClick={handleLogin} theme={theme}>
+          {ctx?.user ? "Logout" : "Login"}
+        </ThemedButton>
+        <DarkModeToggle theme={theme} setTheme={setTheme} />
+      </nav>
+    </header>
+  );
 }
 ```
 
-We'll also need to update the `Profile` component since our context value has
-changed:
+> **Note**: Because our context has the possibility of being null, TypeScript
+> will error when trying to access values on `ctx`. To avoid that, we can use
+> [optional chaining notation][optional chaining].,
+
+We'll also need to update the `Profile` component since our context has changed:
 
 ```jsx
-function Profile({ theme }) {
-  const { user } = useContext(UserContext);
-  // ...
+function Profile({ theme }: Props) {
+  const ctx = useContext(UserContext);
+
+  if (!ctx?.user) return <h2>Please Login To View Profile</h2>;
+  return (
+    <div>
+      <h2>{ctx.user.name}'s Profile</h2>
+      <Interests interests={ctx.user.interests} theme={theme} />
+    </div>
+  );
 }
 ```
+
+Now when you click the `Login` button on the browser, the app should show Duane
+as a user and change the button to say `Logout`!
 
 ## Exercise
 
@@ -346,3 +468,6 @@ minimizing the need for prop drilling.
 - [useContext](https://reactjs.org/docs/hooks-reference.html#usecontext)
 - [Using Composition Instead of Context](https://youtu.be/3XaXKiXtNjw)
 - [Application State Management with React](https://kentcdodds.com/blog/application-state-management-with-react)
+
+[optional chaining]:
+  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining
