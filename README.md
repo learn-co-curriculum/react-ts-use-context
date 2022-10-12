@@ -25,7 +25,7 @@ In this lesson, we have the following components:
 ```txt
 App
 ├── Header
-│   ├── ThemeButton
+│   ├── ThemedButton
 │   └── DarkModeToggle
 └── Profile
     └── Interests
@@ -37,7 +37,7 @@ in the App component. Here's a diagram of the state the components share:
 ```txt
 App [theme]
 ├── Header [theme, user]
-│   ├── ThemeButton [theme]
+│   ├── ThemedButton [theme]
 │   └── DarkModeToggle [theme]
 └── Profile [user]
     └── Interests [theme]
@@ -50,8 +50,8 @@ In addition, because of the requirement that we must pass down data from parent
 to child components, we have a couple of components that take in some data via
 props, only to pass it along to a child component. For example, looking at the
 `Profile` component, we can see that it takes in a `theme` prop, even though it
-doesn't use it directly — it only needs to take this prop in so that it
-can pass it down to the `Interests` component:
+doesn't use it directly — it only needs to take this prop in so that it can pass
+it down to the `Interests` component:
 
 ```jsx
 // takes theme as a prop
@@ -90,8 +90,8 @@ const UserContext = React.createContext();
 ```
 
 After creating the context object, we need a special "provider" component that
-will give access to the context data to its child components. Here's how we can set
-up the context provider:
+will give access to the context data to its child components. Here's how we can
+set up the context provider:
 
 ```jsx
 // src/context/user.js
@@ -123,7 +123,7 @@ both need access to the `user` data in our context:
 ```txt
 App [theme]
 ├── Header [theme, user]
-│   ├── ThemeButton [theme]
+│   ├── ThemedButton [theme]
 │   └── DarkModeToggle [theme]
 └── Profile [user]
     └── Interests [theme]
@@ -321,8 +321,9 @@ drilling". However, React recommends using context sparingly:
 > components at different nesting levels. Apply it sparingly because it makes
 > component reuse more difficult.
 >
-> If you only want to avoid passing some props through many levels, component composition is often a simpler solution than context.
-> — [Before You Use Context](https://reactjs.org/docs/context.html#before-you-use-context)
+> If you only want to avoid passing some props through many levels, component
+> composition is often a simpler solution than context. —
+> [Before You Use Context](https://reactjs.org/docs/context.html#before-you-use-context)
 
 Keep this in mind when you're considering adding context to your application.
 Think about whether or not the data that's being held in context is truly

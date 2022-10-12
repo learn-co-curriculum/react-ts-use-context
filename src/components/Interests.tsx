@@ -1,6 +1,9 @@
-import React from "react";
+interface Props {
+  interests: string[];
+  theme: string;
+}
 
-function Interests({ interests, theme }) {
+function Interests({ interests, theme }: Props) {
   return (
     <div>
       <h4>Interests</h4>
