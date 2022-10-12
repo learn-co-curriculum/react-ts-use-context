@@ -1,9 +1,13 @@
+import { useContext } from "react";
+import { ThemeContext } from "../context/theme";
+
 interface Props {
   interests: string[];
-  theme: string;
 }
 
-function Interests({ interests, theme }: Props) {
+function Interests({ interests }: Props) {
+  const { theme } = useContext(ThemeContext);
+
   return (
     <div>
       <h4>Interests</h4>

@@ -1,10 +1,11 @@
-import { HTMLAttributes } from "react";
+import { HTMLAttributes, useContext } from "react";
+import { ThemeContext } from "../context/theme";
 
-interface Props extends HTMLAttributes<HTMLElement> {
-  theme: string;
-}
+interface Props extends HTMLAttributes<HTMLElement> {}
 
-function ThemedButton({ theme, ...props }: Props) {
+function ThemedButton({ ...props }: Props) {
+  const { theme } = useContext(ThemeContext);
+
   return <button className={theme} {...props} />;
 }
 
