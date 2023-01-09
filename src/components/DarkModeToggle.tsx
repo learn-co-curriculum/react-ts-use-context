@@ -1,7 +1,10 @@
-import React from "react";
+interface Props {
+  theme: string;
+  setTheme(theme: string): void;
+}
 
-function DarkModeToggle({ theme, setTheme }) {
-  function handleToggleTheme(e) {
+function DarkModeToggle({ theme, setTheme }: Props) {
+  function handleToggleTheme(e: React.ChangeEvent<HTMLInputElement>) {
     setTheme(e.target.checked ? "dark" : "light");
   }
   return (

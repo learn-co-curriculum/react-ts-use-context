@@ -1,9 +1,15 @@
-import React from "react";
 import ThemedButton from "./ThemedButton";
 import DarkModeToggle from "./DarkModeToggle";
-import defaultUser from "../data";
+import defaultUser, { User } from "../data";
 
-function Header({ theme, setTheme, user, setUser }) {
+interface Props {
+  theme: string;
+  setTheme(theme: string): void;
+  user: User;
+  setUser(user: User | null): void;
+}
+
+function Header({ theme, setTheme, user, setUser }: Props) {
   function handleLogin() {
     if (user) {
       setUser(null);
